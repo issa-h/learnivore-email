@@ -1,12 +1,8 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import { Resend } from 'resend'
 
-const ses = new SESClient({
-  region: process.env.AWS_REGION || 'eu-west-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-})
+function getClient() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export async function sendEmail(params: {
   to: string
@@ -16,15 +12,16 @@ export async function sendEmail(params: {
   const fromName = process.env.SES_FROM_NAME || 'Learnivore'
   const fromEmail = process.env.SES_FROM_EMAIL!
 
-  const command = new SendEmailCommand({
-    Source: `${fromName} <${fromEmail}>`,
-    Destination: { ToAddresses: [params.to] },
-    Message: {
-      Subject: { Data: params.subject, Charset: 'UTF-8' },
-      Body: { Html: { Data: params.htmlBody, Charset: 'UTF-8' } },
-    },
+  const { data, error } = await getClient().emails.send({
+    from: `${fromName} <${fromEmail}>`,
+    to: [params.to],
+    subject: params.subject,
+    html: params.htmlBody,
   })
 
-  const result = await ses.send(command)
-  return result.MessageId ?? ''
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data?.id ?? ''
 }
