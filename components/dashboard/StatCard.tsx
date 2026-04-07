@@ -1,28 +1,66 @@
-import { Card, CardContent } from '@/components/ui/card'
 import { type LucideIcon } from 'lucide-react'
 
 interface StatCardProps {
   label: string
   value: string
   icon: LucideIcon
+  delta?: string
+  deltaPositive?: boolean
+  animationDelay?: number
 }
 
-export default function StatCard({ label, value, icon: Icon }: StatCardProps) {
+export default function StatCard({
+  label,
+  value,
+  icon: Icon,
+  delta,
+  deltaPositive,
+  animationDelay = 0,
+}: StatCardProps) {
   return (
-    <Card className="border border-gray-200 shadow-none">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              {label}
-            </p>
-            <p className="text-2xl font-semibold text-gray-900">{value}</p>
-          </div>
-          <div className="rounded-md bg-gray-100 p-2">
-            <Icon size={18} className="text-gray-600" strokeWidth={1.75} />
-          </div>
+    <div
+      className="card-dark space-y-3"
+      style={{
+        animation: `fadeUp 0.3s ease ${animationDelay}ms both`,
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <p
+          className="text-xs font-medium uppercase tracking-widest"
+          style={{ color: 'var(--text-secondary)', letterSpacing: '0.08em' }}
+        >
+          {label}
+        </p>
+        <div
+          className="rounded-lg p-1.5"
+          style={{ background: 'var(--accent-subtle)' }}
+        >
+          <Icon size={15} style={{ color: 'var(--accent)' }} strokeWidth={1.75} />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="flex items-end gap-2">
+        <p
+          className="leading-none"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '32px',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {value}
+        </p>
+        {delta !== undefined && (
+          <span
+            className="text-xs font-medium mb-0.5"
+            style={{ color: deltaPositive ? 'var(--green)' : 'var(--red)' }}
+          >
+            {delta}
+          </span>
+        )}
+      </div>
+    </div>
   )
 }

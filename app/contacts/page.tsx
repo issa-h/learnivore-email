@@ -27,7 +27,7 @@ export default async function ContactsPage() {
     if (batchError) {
       return (
         <div className="p-8">
-          <p className="text-sm text-red-600">
+          <p className="text-sm" style={{ color: 'var(--red)' }}>
             Erreur lors du chargement des contacts : {batchError.message}
           </p>
         </div>
@@ -52,8 +52,13 @@ export default async function ContactsPage() {
     <div className="p-8 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-baseline gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">Contacts</h1>
-        <span className="text-sm text-gray-400">
+        <h1
+          className="font-semibold"
+          style={{ fontSize: '24px', color: 'var(--text-primary)' }}
+        >
+          Contacts
+        </h1>
+        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           {total.toLocaleString('fr-FR')} contact{total > 1 ? 's' : ''}
         </span>
       </div>

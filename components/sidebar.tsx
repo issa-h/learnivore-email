@@ -32,9 +32,22 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside aria-label="Navigation principale" className="w-56 shrink-0 border-r border-gray-200 bg-white flex flex-col h-full">
-      <div className="px-6 py-5 border-b border-gray-100">
-        <span className="text-sm font-semibold text-gray-900 tracking-tight">
+    <aside
+      aria-label="Navigation principale"
+      className="w-56 shrink-0 flex flex-col h-full"
+      style={{
+        background: 'var(--bg-surface)',
+        borderRight: '1px solid var(--border-subtle)',
+      }}
+    >
+      <div
+        className="px-6 py-5"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+      >
+        <span
+          className="text-sm font-semibold tracking-tight"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Learnivore Email
         </span>
       </div>
@@ -47,11 +60,33 @@ export default function Sidebar() {
               key={href}
               href={href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                 isActive
-                  ? 'bg-gray-100 text-gray-900 font-medium'
-                  : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'font-medium'
+                  : ''
               )}
+              style={
+                isActive
+                  ? {
+                      background: 'var(--accent-subtle)',
+                      color: 'var(--accent-hover)',
+                    }
+                  : {
+                      color: 'var(--text-secondary)',
+                    }
+              }
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'var(--bg-elevated)'
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = ''
+                  e.currentTarget.style.color = 'var(--text-secondary)'
+                }
+              }}
             >
               <Icon size={16} strokeWidth={1.75} />
               {label}
@@ -60,8 +95,13 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="px-6 py-4 border-t border-gray-100">
-        <p className="text-xs text-gray-400">Learnivore &copy; 2026</p>
+      <div
+        className="px-6 py-4"
+        style={{ borderTop: '1px solid var(--border-subtle)' }}
+      >
+        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          Learnivore &copy; 2026
+        </p>
       </div>
     </aside>
   )

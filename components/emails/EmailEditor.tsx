@@ -7,9 +7,6 @@ import StarterKit from '@tiptap/starter-kit'
 import TiptapLink from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import { SequenceStep } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import {
   Bold,
   Italic,
@@ -87,46 +84,83 @@ export default function EmailEditor({ step, sequenceName, sequenceId }: Props) {
     }
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--border-default)',
+    background: 'var(--bg-elevated)',
+    color: 'var(--text-primary)',
+    fontSize: '14px',
+    outline: 'none',
+  }
+
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1 text-sm text-gray-400 flex-wrap">
-        <Link href="/sequences" className="hover:text-gray-700 transition-colors">
+      <nav className="flex items-center gap-1 text-sm flex-wrap" style={{ color: 'var(--text-secondary)' }}>
+        <Link
+          href="/sequences"
+          className="transition-colors hover:underline"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           Séquences
         </Link>
-        <ChevronRight size={14} />
+        <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
         <Link
           href={`/sequences/${sequenceId}/edit`}
-          className="hover:text-gray-700 transition-colors truncate max-w-xs"
+          className="transition-colors hover:underline truncate max-w-xs"
+          style={{ color: 'var(--text-secondary)' }}
         >
           {sequenceName}
         </Link>
-        <ChevronRight size={14} />
-        <span className="text-gray-600">Étape {step.position}</span>
+        <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
+        <span style={{ color: 'var(--text-primary)' }}>Étape {step.position}</span>
       </nav>
 
       {/* Subject input */}
       <div className="space-y-1.5">
-        <label htmlFor="subject" className="text-sm font-medium text-gray-700">
+        <label
+          htmlFor="subject"
+          className="text-sm font-medium"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           Sujet
         </label>
-        <Input
+        <input
           id="subject"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Ex : Bienvenue dans la formation"
-          className="text-base"
+          style={{ ...inputStyle, fontSize: '15px' }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--accent)'
+            e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-subtle)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-default)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         />
       </div>
 
-      <Separator />
+      <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
 
       {/* Tiptap editor */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Corps de l'email</label>
+        <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+          Corps de l&apos;email
+        </label>
 
         {/* Toolbar */}
-        <div className="flex items-center gap-0.5 p-1.5 border border-gray-200 rounded-t-lg bg-gray-50">
+        <div
+          className="flex items-center gap-0.5 p-1.5 rounded-t-lg"
+          style={{
+            border: '1px solid var(--border-default)',
+            borderBottom: 'none',
+            background: 'var(--bg-elevated)',
+          }}
+        >
           <ToolbarButton
             onClick={() => editor?.chain().focus().toggleBold().run()}
             active={editor?.isActive('bold') ?? false}
@@ -148,7 +182,10 @@ export default function EmailEditor({ step, sequenceName, sequenceId }: Props) {
           >
             <LinkIcon size={14} />
           </ToolbarButton>
-          <div className="w-px h-4 bg-gray-200 mx-1" />
+          <div
+            className="w-px h-4 mx-1"
+            style={{ background: 'var(--border-default)' }}
+          />
           <ToolbarButton
             onClick={() =>
               editor?.chain().focus().toggleHeading({ level: 2 }).run()
@@ -168,25 +205,49 @@ export default function EmailEditor({ step, sequenceName, sequenceId }: Props) {
         </div>
 
         {/* Editor area */}
-        <div className="border border-t-0 border-gray-200 rounded-b-lg bg-white min-h-64 prose prose-sm max-w-none">
+        <div
+          className="tiptap-dark"
+          style={{
+            border: '1px solid var(--border-default)',
+            borderRadius: '0 0 10px 10px',
+            background: 'var(--bg-elevated)',
+            minHeight: '256px',
+          }}
+        >
           <EditorContent
             editor={editor}
-            className="p-4 min-h-64 focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-56 [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:text-gray-400 [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:h-0"
+            className="min-h-64 focus-within:outline-none"
           />
         </div>
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        <Button onClick={handleSave} disabled={saving}>
-          <Save size={14} className="mr-1.5" />
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: 'var(--accent)', color: '#ffffff', border: 'none', cursor: 'pointer' }}
+        >
+          <Save size={14} />
           {saving ? 'Sauvegarde…' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
-        </Button>
-        <Button variant="outline" disabled title="Disponible prochainement">
-          <Send size={14} className="mr-1.5" />
+        </button>
+        <button
+          disabled
+          title="Disponible prochainement"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium opacity-40 cursor-not-allowed"
+          style={{
+            border: '1px solid var(--border-default)',
+            background: 'transparent',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          <Send size={14} />
           Envoyer un test
-        </Button>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        </button>
+        {error && (
+          <p className="text-sm" style={{ color: 'var(--red)' }}>{error}</p>
+        )}
       </div>
     </div>
   )
@@ -208,11 +269,25 @@ function ToolbarButton({
       type="button"
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded transition-colors ${
-        active
-          ? 'bg-gray-200 text-gray-900'
-          : 'text-gray-500 hover:bg-gray-200 hover:text-gray-900'
-      }`}
+      className="p-1.5 rounded transition-colors"
+      style={{
+        background: active ? 'var(--accent-subtle)' : 'transparent',
+        color: active ? 'var(--accent-hover)' : 'var(--text-secondary)',
+        border: 'none',
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = 'var(--bg-overlay)'
+          e.currentTarget.style.color = 'var(--text-primary)'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = 'var(--text-secondary)'
+        }
+      }}
     >
       {children}
     </button>

@@ -1,10 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { AiSuggestion } from '@/types'
 
 interface SuggestionCardProps {
@@ -17,9 +13,7 @@ interface SuggestionCardProps {
 
 function getBodyPreview(html: string | null): string {
   if (!html) return ''
-  // Strip HTML tags
   const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  // Return first 3 lines (split by sentence-ending or line breaks)
   const lines = text.split(/[.!?]\s+/)
   return lines.slice(0, 3).join('. ') + (lines.length > 3 ? '...' : '')
 }
@@ -52,88 +46,139 @@ export default function SuggestionCard({
   }
 
   const isResend = suggestion.suggestion_type === 'resend'
-  const borderColor = isResend ? 'border-l-blue-400' : 'border-l-green-400'
-  const badgeClass = isResend
-    ? 'bg-blue-50 text-blue-700 border-blue-200'
-    : 'bg-green-50 text-green-700 border-green-200'
-  const badgeLabel = isResend ? 'Re-send' : 'Nouvelle variante'
-
   const bodyPreview = getBodyPreview(suggestion.suggested_body)
 
+  const accentColor = isResend ? '#818cf8' : 'var(--green)'
+  const accentBg = isResend ? 'var(--accent-subtle)' : 'var(--green-subtle)'
+  const accentBorder = isResend ? 'rgba(99, 102, 241, 0.3)' : 'rgba(34, 197, 94, 0.25)'
+  const badgeLabel = isResend ? 'Re-send' : 'Nouvelle variante'
+
   return (
-    <Card className={`border-l-4 ${borderColor} shadow-none`}>
-      <CardContent className="p-5 space-y-4">
-        {/* Header row */}
-        <div className="flex items-center gap-2">
-          <Badge className={badgeClass} variant="outline">
-            {badgeLabel}
-          </Badge>
+    <div
+      className="space-y-4 p-5"
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        borderLeft: `3px solid ${accentColor}`,
+        borderRadius: '12px',
+      }}
+    >
+      {/* Badge */}
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-flex items-center rounded-full px-2.5 py-0.5"
+          style={{
+            fontSize: '11px',
+            fontWeight: 500,
+            borderRadius: '20px',
+            background: accentBg,
+            color: accentColor,
+            border: `1px solid ${accentBorder}`,
+          }}
+        >
+          {badgeLabel}
+        </span>
+      </div>
+
+      {/* Source email */}
+      {sourceSubject && (
+        <div className="text-xs space-y-0.5" style={{ color: 'var(--text-secondary)' }}>
+          <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Email source :
+          </span>{' '}
+          <span>{sourceSubject}</span>
+          {openRate !== null && openRate !== undefined && (
+            <span className="ml-2" style={{ color: 'var(--text-tertiary)' }}>
+              ({Math.round(openRate)}% d&apos;ouverture)
+            </span>
+          )}
         </div>
+      )}
 
-        {/* Source email */}
-        {sourceSubject && (
-          <div className="text-xs text-gray-500 space-y-0.5">
-            <span className="font-medium text-gray-600">Email source :</span>{' '}
-            <span>{sourceSubject}</span>
-            {openRate !== null && openRate !== undefined && (
-              <span className="ml-2 text-gray-400">
-                ({Math.round(openRate)}% d&apos;ouverture)
-              </span>
-            )}
-          </div>
-        )}
+      <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
 
-        <Separator />
+      {/* Reasoning */}
+      {suggestion.reasoning && (
+        <p className="text-sm italic" style={{ color: 'var(--text-secondary)' }}>
+          &ldquo;{suggestion.reasoning}&rdquo;
+        </p>
+      )}
 
-        {/* Reasoning */}
-        {suggestion.reasoning && (
-          <p className="text-sm text-gray-600 italic">
-            &ldquo;{suggestion.reasoning}&rdquo;
-          </p>
-        )}
+      {/* Suggested subject */}
+      <div>
+        <p
+          className="text-xs font-medium uppercase mb-1"
+          style={{ color: 'var(--text-tertiary)', letterSpacing: '0.08em' }}
+        >
+          Sujet suggéré
+        </p>
+        <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+          {suggestion.suggested_subject}
+        </p>
+      </div>
 
-        {/* Suggested subject */}
+      {/* Body preview */}
+      {bodyPreview && (
         <div>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-            Sujet suggéré
+          <p
+            className="text-xs font-medium uppercase mb-1"
+            style={{ color: 'var(--text-tertiary)', letterSpacing: '0.08em' }}
+          >
+            Aperçu du contenu
           </p>
-          <p className="text-sm font-semibold text-gray-900">
-            {suggestion.suggested_subject}
+          <p className="text-sm line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
+            {bodyPreview}
           </p>
         </div>
+      )}
 
-        {/* Body preview */}
-        {bodyPreview && (
-          <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-              Aperçu du contenu
-            </p>
-            <p className="text-sm text-gray-700 line-clamp-3">{bodyPreview}</p>
-          </div>
-        )}
+      <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
 
-        <Separator />
-
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
-            onClick={() => handleAction('approve')}
-            disabled={loading !== null}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {loading === 'approve' ? 'En cours...' : 'Approuver'}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleAction('dismiss')}
-            disabled={loading !== null}
-          >
-            {loading === 'dismiss' ? 'En cours...' : 'Ignorer'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Actions */}
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={() => handleAction('approve')}
+          disabled={loading !== null}
+          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: 'var(--green-subtle)',
+            color: 'var(--green)',
+            border: '1px solid rgba(34, 197, 94, 0.2)',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            if (loading === null) {
+              e.currentTarget.style.background = 'rgba(34, 197, 94, 0.2)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--green-subtle)'
+          }}
+        >
+          {loading === 'approve' ? 'En cours...' : 'Approuver'}
+        </button>
+        <button
+          onClick={() => handleAction('dismiss')}
+          disabled={loading !== null}
+          className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: 'transparent',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border-default)',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            if (loading === null) {
+              e.currentTarget.style.background = 'var(--bg-elevated)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+          }}
+        >
+          {loading === 'dismiss' ? 'En cours...' : 'Ignorer'}
+        </button>
+      </div>
+    </div>
   )
 }

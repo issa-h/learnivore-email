@@ -32,48 +32,68 @@ interface ActivityFeedProps {
 export default function ActivityFeed({ events }: ActivityFeedProps) {
   if (events.length === 0) {
     return (
-      <p className="text-sm text-gray-400 py-6 text-center">
+      <p
+        className="py-6 text-center text-sm"
+        style={{ color: 'var(--text-tertiary)' }}
+      >
         Aucune activité pour le moment
       </p>
     )
   }
 
   return (
-    <ul className="divide-y divide-gray-100">
-      {events.map((event) => {
+    <ul>
+      {events.map((event, i) => {
         const name = event.contactFirstName ?? event.contactEmail
         const isOpen = event.eventType === 'open'
+        const isLast = i === events.length - 1
 
         return (
-          <li key={event.id} className="flex items-start gap-3 py-3">
-            <div className="mt-0.5 rounded-md bg-gray-100 p-1.5 shrink-0">
+          <li
+            key={event.id}
+            className="flex items-start gap-3 py-3"
+            style={{
+              borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
+            }}
+          >
+            <div
+              className="mt-0.5 rounded-lg p-1.5 shrink-0"
+              style={{
+                background: isOpen ? 'rgba(99, 102, 241, 0.12)' : 'rgba(99, 102, 241, 0.08)',
+              }}
+            >
               {isOpen ? (
-                <Mail size={14} className="text-gray-500" strokeWidth={1.75} />
+                <Mail size={14} style={{ color: 'var(--accent)' }} strokeWidth={1.75} />
               ) : (
-                <MousePointerClick size={14} className="text-gray-500" strokeWidth={1.75} />
+                <MousePointerClick size={14} style={{ color: 'var(--accent-hover)' }} strokeWidth={1.75} />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-700 truncate">
-                <span className="font-medium text-gray-900">{name}</span>{' '}
+              <p className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
+                <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                  {name}
+                </span>{' '}
                 {isOpen ? (
                   <>
                     a ouvert{' '}
-                    <span className="text-gray-600">
+                    <span style={{ color: 'var(--text-secondary)' }}>
                       &ldquo;{event.subject}&rdquo;
                     </span>
                   </>
                 ) : (
                   <>
                     a cliqué un lien dans{' '}
-                    <span className="text-gray-600">
+                    <span style={{ color: 'var(--text-secondary)' }}>
                       &ldquo;{event.subject}&rdquo;
                     </span>
                   </>
                 )}
               </p>
             </div>
-            <span className="text-xs text-gray-400 shrink-0 mt-0.5">
+            <span
+              className="text-xs shrink-0 mt-0.5"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
               {relativeTime(event.occurredAt)}
             </span>
           </li>

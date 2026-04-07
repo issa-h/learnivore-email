@@ -4,10 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Sequence, SequenceStep } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Separator } from '@/components/ui/separator'
 import {
   ChevronUp,
   ChevronDown,
@@ -20,6 +17,30 @@ import {
 interface Props {
   sequence: Sequence
   steps: SequenceStep[]
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 12px',
+  borderRadius: '8px',
+  border: '1px solid var(--border-default)',
+  background: 'var(--bg-elevated)',
+  color: 'var(--text-primary)',
+  fontSize: '14px',
+  outline: 'none',
+}
+
+const btnGhost: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '4px',
+  borderRadius: '6px',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  color: 'var(--text-secondary)',
+  transition: 'background 0.1s ease, color 0.1s ease',
 }
 
 export default function SequenceEditor({ sequence, steps: initialSteps }: Props) {
@@ -87,11 +108,9 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
     newSteps[index] = newSteps[swapIndex]
     newSteps[swapIndex] = temp
 
-    // Reassign positions
     const updated = newSteps.map((s, i) => ({ ...s, position: i + 1 }))
     setSteps(updated)
 
-    // Persist both swapped steps
     await Promise.all([
       fetch(`/api/sequences/${sequence.id}/steps/${updated[index].id}`, {
         method: 'PATCH',
@@ -129,7 +148,7 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        throw new Error(body.error ?? 'Erreur lors de l\'ajout')
+        throw new Error(body.error ?? "Erreur lors de l'ajout")
       }
       const step: SequenceStep = await res.json()
       setSteps((prev) => [...prev, step])
@@ -146,12 +165,16 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
   return (
     <div className="p-8 max-w-3xl mx-auto space-y-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1 text-sm text-gray-400">
-        <Link href="/sequences" className="hover:text-gray-700 transition-colors">
+      <nav className="flex items-center gap-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <Link
+          href="/sequences"
+          className="transition-colors hover:underline"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           Séquences
         </Link>
-        <ChevronRight size={14} />
-        <span className="text-gray-600 truncate max-w-xs">{name}</span>
+        <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
+        <span className="truncate max-w-xs" style={{ color: 'var(--text-primary)' }}>{name}</span>
       </nav>
 
       {/* Header: name + active toggle */}
@@ -159,7 +182,7 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
         <div className="flex-1">
           {nameEditing ? (
             <div className="flex items-center gap-2">
-              <Input
+              <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={saveName}
@@ -170,7 +193,14 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
                     setNameEditing(false)
                   }
                 }}
-                className="text-xl font-semibold h-auto py-1 px-2"
+                className="flex-1 text-xl font-semibold py-1 px-2 rounded-lg"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--accent)',
+                  color: 'var(--text-primary)',
+                  boxShadow: '0 0 0 2px var(--accent-subtle)',
+                  outline: 'none',
+                }}
                 autoFocus
                 disabled={savingName}
               />
@@ -178,19 +208,21 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
           ) : (
             <button
               onClick={() => setNameEditing(true)}
-              className="group flex items-center gap-2 text-xl font-semibold text-gray-900 hover:text-gray-700"
+              className="group flex items-center gap-2 text-xl font-semibold"
+              style={{ color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
               {name}
               <Pencil
                 size={14}
-                className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ color: 'var(--text-tertiary)' }}
               />
             </button>
           )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             {isActive ? 'Actif' : 'Inactif'}
           </span>
           <Switch
@@ -201,19 +233,29 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
         </div>
       </div>
 
-      <Separator />
+      <div style={{ borderTop: '1px solid var(--border-subtle)' }} />
 
       {/* Steps list */}
       <div className="space-y-3">
-        <h2 className="text-sm font-medium text-gray-700">
+        <h2
+          className="text-xs font-medium uppercase"
+          style={{ color: 'var(--text-secondary)', letterSpacing: '0.08em' }}
+        >
           Étapes{' '}
-          <span className="text-gray-400 font-normal">
+          <span className="font-normal" style={{ color: 'var(--text-tertiary)' }}>
             ({steps.length})
           </span>
         </h2>
 
         {steps.length === 0 && (
-          <div className="text-center py-10 border border-dashed border-gray-200 rounded-lg text-sm text-gray-400">
+          <div
+            className="text-center py-10 text-sm"
+            style={{
+              border: '1px dashed var(--border-default)',
+              borderRadius: '12px',
+              color: 'var(--text-tertiary)',
+            }}
+          >
             Aucune étape. Ajoute ta première étape ci-dessous.
           </div>
         )}
@@ -222,19 +264,31 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
           {steps.map((step, index) => (
             <div
               key={step.id}
-              className="flex items-start gap-3 p-4 bg-white border border-gray-200 rounded-lg"
+              className="flex items-start gap-3 p-4"
+              style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '10px',
+              }}
             >
               {/* Position badge */}
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-600 shrink-0 mt-0.5">
+              <div
+                className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium shrink-0 mt-0.5"
+                style={{
+                  background: 'var(--accent-subtle)',
+                  color: 'var(--accent)',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
                 {step.position}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                   {step.subject}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
                   {step.position === 1
                     ? 'Email initial'
                     : `${step.delay_days} jour${step.delay_days !== 1 ? 's' : ''} après l'étape précédente`}
@@ -243,44 +297,50 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
 
               {/* Actions */}
               <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-xs"
+                <button
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors"
+                  style={{
+                    color: 'var(--text-secondary)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
                   onClick={() => router.push(`/emails/${step.id}/edit`)}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
                 >
-                  <Pencil size={12} className="mr-1" />
-                  Modifier l'email
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
+                  <Pencil size={12} />
+                  Modifier l&apos;email
+                </button>
+                <button
+                  style={btnGhost}
                   disabled={index === 0}
                   onClick={() => moveStep(step.id, 'up')}
                   title="Monter"
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
                 >
                   <ChevronUp size={14} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
+                </button>
+                <button
+                  style={btnGhost}
                   disabled={index === steps.length - 1}
                   onClick={() => moveStep(step.id, 'down')}
                   title="Descendre"
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
                 >
                   <ChevronDown size={14} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                </button>
+                <button
+                  style={{ ...btnGhost, color: 'var(--red)' }}
                   onClick={() => deleteStep(step.id)}
                   title="Supprimer"
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--red-subtle)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
                 >
                   <Trash2 size={14} />
-                </Button>
+                </button>
               </div>
             </div>
           ))}
@@ -291,59 +351,111 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
       {showAddForm ? (
         <form
           onSubmit={addStep}
-          className="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3"
+          className="p-4 space-y-3"
+          style={{
+            border: '1px solid var(--border-default)',
+            borderRadius: '12px',
+            background: 'var(--bg-elevated)',
+          }}
         >
-          <p className="text-sm font-medium text-gray-700">Nouvelle étape</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            Nouvelle étape
+          </p>
           <div className="flex gap-3">
             <div className="flex-1 space-y-1">
-              <label className="text-xs text-gray-500">Sujet de l'email</label>
-              <Input
+              <label className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Sujet de l&apos;email
+              </label>
+              <input
                 value={newSubject}
                 onChange={(e) => setNewSubject(e.target.value)}
                 placeholder="Ex : Comment débloquer ton apprentissage"
                 autoFocus
+                style={inputStyle}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--accent)'
+                  e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-subtle)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-default)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
               />
             </div>
             <div className="w-32 space-y-1">
-              <label className="text-xs text-gray-500">Délai (jours)</label>
-              <Input
+              <label className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Délai (jours)
+              </label>
+              <input
                 type="number"
                 min={0}
                 value={newDelay}
                 onChange={(e) => setNewDelay(Number(e.target.value))}
+                style={inputStyle}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--accent)'
+                  e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent-subtle)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-default)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
               />
             </div>
           </div>
-          {addError && <p className="text-xs text-red-600">{addError}</p>}
+          {addError && (
+            <p className="text-xs" style={{ color: 'var(--red)' }}>{addError}</p>
+          )}
           <div className="flex items-center gap-2">
-            <Button type="submit" size="sm" disabled={addingStep || !newSubject.trim()}>
+            <button
+              type="submit"
+              disabled={addingStep || !newSubject.trim()}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: 'var(--accent)', color: '#ffffff', border: 'none', cursor: 'pointer' }}
+            >
               {addingStep ? 'Ajout…' : 'Ajouter'}
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer' }}
               onClick={() => {
                 setShowAddForm(false)
                 setNewSubject('')
                 setNewDelay(1)
                 setAddError(null)
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-overlay)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
             >
               Annuler
-            </Button>
+            </button>
           </div>
         </form>
       ) : (
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={() => setShowAddForm(true)}
-          className="w-full border-dashed"
+          className="w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors"
+          style={{
+            border: '1px dashed var(--border-default)',
+            background: 'transparent',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'var(--accent)'
+            e.currentTarget.style.color = 'var(--accent)'
+            e.currentTarget.style.background = 'var(--accent-subtle)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border-default)'
+            e.currentTarget.style.color = 'var(--text-secondary)'
+            e.currentTarget.style.background = 'transparent'
+          }}
         >
-          <Plus size={14} className="mr-1.5" />
+          <Plus size={14} />
           Ajouter une étape
-        </Button>
+        </button>
       )}
     </div>
   )

@@ -71,13 +71,17 @@ export default async function AiPage() {
     <div className="p-8 max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Suggestions IA</h1>
-        <p className="text-sm text-gray-400 mt-0.5">
+        <h1
+          className="font-semibold"
+          style={{ fontSize: '24px', color: 'var(--text-primary)' }}
+        >
+          Suggestions IA
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
           Des suggestions d&rsquo;emails basées sur les performances de tes séquences.
         </p>
       </div>
 
-      {/* Client component handles interactivity */}
       <AiClient
         initialSuggestions={pendingSuggestions}
         sourceSteps={sourceSteps}

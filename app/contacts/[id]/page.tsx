@@ -4,28 +4,21 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
 import { Contact, Enrollment, EmailEvent, Sequence } from '@/types'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Mail, MousePointerClick, ChevronRight } from 'lucide-react'
 
-// Stable palette for tags — deterministic based on tag string
+// Dark-mode palette for tags — deterministic based on tag string
 const TAG_COLORS = [
-  'bg-blue-100 text-blue-700 border-blue-200',
-  'bg-violet-100 text-violet-700 border-violet-200',
-  'bg-emerald-100 text-emerald-700 border-emerald-200',
-  'bg-amber-100 text-amber-700 border-amber-200',
-  'bg-rose-100 text-rose-700 border-rose-200',
-  'bg-cyan-100 text-cyan-700 border-cyan-200',
-  'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
-  'bg-lime-100 text-lime-700 border-lime-200',
+  { bg: 'rgba(99, 102, 241, 0.15)', text: '#818cf8', border: 'rgba(99, 102, 241, 0.25)' },
+  { bg: 'rgba(168, 85, 247, 0.15)', text: '#c084fc', border: 'rgba(168, 85, 247, 0.25)' },
+  { bg: 'rgba(34, 197, 94, 0.12)', text: '#4ade80', border: 'rgba(34, 197, 94, 0.2)' },
+  { bg: 'rgba(245, 158, 11, 0.12)', text: '#fbbf24', border: 'rgba(245, 158, 11, 0.2)' },
+  { bg: 'rgba(239, 68, 68, 0.12)', text: '#f87171', border: 'rgba(239, 68, 68, 0.2)' },
+  { bg: 'rgba(6, 182, 212, 0.12)', text: '#22d3ee', border: 'rgba(6, 182, 212, 0.2)' },
+  { bg: 'rgba(236, 72, 153, 0.12)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.2)' },
+  { bg: 'rgba(132, 204, 22, 0.12)', text: '#a3e635', border: 'rgba(132, 204, 22, 0.2)' },
 ]
 
-function tagColor(tag: string): string {
+function tagColor(tag: string) {
   let hash = 0
   for (let i = 0; i < tag.length; i++) {
     hash = (hash * 31 + tag.charCodeAt(i)) & 0xffffffff
@@ -53,6 +46,13 @@ function formatDateTime(iso: string): string {
 
 interface PageProps {
   params: Promise<{ id: string }>
+}
+
+const cardStyle: React.CSSProperties = {
+  background: 'var(--bg-surface)',
+  border: '1px solid var(--border-subtle)',
+  borderRadius: '12px',
+  padding: '20px 24px',
 }
 
 export default async function ContactDetailPage({ params }: PageProps) {
@@ -107,176 +107,228 @@ export default async function ContactDetailPage({ params }: PageProps) {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-gray-500">
-        <Link href="/contacts" className="hover:text-gray-800 transition-colors">
+      <nav className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--text-secondary)' }}>
+        <Link
+          href="/contacts"
+          className="transition-colors hover:underline"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           Contacts
         </Link>
-        <ChevronRight size={14} className="text-gray-300" />
-        <span className="text-gray-700 font-medium">{contact.email}</span>
+        <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
+        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{contact.email}</span>
       </nav>
 
-      {/* Fiche contact */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {contact.first_name ? contact.first_name : contact.email}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      {/* Contact card */}
+      <div style={cardStyle} className="fade-up-0">
+        <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+          {contact.first_name ? contact.first_name : contact.email}
+        </h2>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div>
+            <dt
+              className="text-xs uppercase mb-1"
+              style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', fontWeight: 500 }}
+            >
+              Email
+            </dt>
+            <dd className="text-sm" style={{ color: 'var(--text-primary)' }}>{contact.email}</dd>
+          </div>
+          {contact.first_name && (
             <div>
-              <dt className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">
-                Email
+              <dt
+                className="text-xs uppercase mb-1"
+                style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', fontWeight: 500 }}
+              >
+                Prénom
               </dt>
-              <dd className="text-gray-800">{contact.email}</dd>
+              <dd className="text-sm" style={{ color: 'var(--text-primary)' }}>{contact.first_name}</dd>
             </div>
-            {contact.first_name && (
-              <div>
-                <dt className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">
-                  Prénom
-                </dt>
-                <dd className="text-gray-800">{contact.first_name}</dd>
-              </div>
-            )}
-            <div>
-              <dt className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">
-                Source
-              </dt>
-              <dd className="text-gray-800">
-                {contact.source ?? <span className="italic text-gray-400">—</span>}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">
-                Date d&apos;ajout
-              </dt>
-              <dd className="text-gray-800">{formatDate(contact.created_at)}</dd>
-            </div>
-            <div className="col-span-2">
-              <dt className="text-gray-400 text-xs uppercase tracking-wide mb-1">
-                Tags
-              </dt>
-              <dd>
-                {contact.tags.length === 0 ? (
-                  <span className="italic text-gray-400 text-xs">Aucun tag</span>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {contact.tags.map((tag) => (
-                      <Badge
+          )}
+          <div>
+            <dt
+              className="text-xs uppercase mb-1"
+              style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', fontWeight: 500 }}
+            >
+              Source
+            </dt>
+            <dd className="text-sm" style={{ color: 'var(--text-primary)' }}>
+              {contact.source ?? <span className="italic" style={{ color: 'var(--text-tertiary)' }}>—</span>}
+            </dd>
+          </div>
+          <div>
+            <dt
+              className="text-xs uppercase mb-1"
+              style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', fontWeight: 500 }}
+            >
+              Date d&apos;ajout
+            </dt>
+            <dd
+              className="text-sm"
+              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
+            >
+              {formatDate(contact.created_at)}
+            </dd>
+          </div>
+          <div className="col-span-2">
+            <dt
+              className="text-xs uppercase mb-2"
+              style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', fontWeight: 500 }}
+            >
+              Tags
+            </dt>
+            <dd>
+              {contact.tags.length === 0 ? (
+                <span className="text-xs italic" style={{ color: 'var(--text-tertiary)' }}>
+                  Aucun tag
+                </span>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {contact.tags.map((tag) => {
+                    const colors = tagColor(tag)
+                    return (
+                      <span
                         key={tag}
-                        className={['border text-xs font-normal', tagColor(tag)].join(' ')}
+                        className="inline-flex items-center rounded-full px-2.5 py-0.5"
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          background: colors.bg,
+                          color: colors.text,
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: '20px',
+                        }}
                       >
                         {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </dd>
+          </div>
+        </dl>
+      </div>
 
       {/* Séquences */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Séquences{' '}
-            <span className="text-gray-400 font-normal text-sm">
-              ({enrollments.length})
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {enrollments.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">
-              Ce contact n&apos;est inscrit à aucune séquence.
-            </p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {enrollments.map((enrollment) => {
-                const seq = sequencesMap[enrollment.sequence_id]
-                return (
-                  <li key={enrollment.id} className="py-3 text-sm flex items-start justify-between gap-4">
-                    <div className="space-y-0.5">
-                      <p className="font-medium text-gray-800">
-                        {seq?.name ?? (
-                          <span className="italic text-gray-400">
-                            Séquence inconnue
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        Inscrit le {formatDate(enrollment.enrolled_at)} · Étape{' '}
-                        {enrollment.current_step}
-                      </p>
-                    </div>
-                    <Badge
-                      className={
-                        enrollment.completed_at
-                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-normal shrink-0'
-                          : 'bg-blue-100 text-blue-700 border border-blue-200 text-xs font-normal shrink-0'
-                      }
-                    >
-                      {enrollment.completed_at ? 'Terminée' : 'En cours'}
-                    </Badge>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <div style={cardStyle} className="fade-up-1">
+        <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+          Séquences{' '}
+          <span className="text-sm font-normal" style={{ color: 'var(--text-tertiary)' }}>
+            ({enrollments.length})
+          </span>
+        </h2>
+        {enrollments.length === 0 ? (
+          <p className="text-sm italic" style={{ color: 'var(--text-tertiary)' }}>
+            Ce contact n&apos;est inscrit à aucune séquence.
+          </p>
+        ) : (
+          <ul>
+            {enrollments.map((enrollment, i) => {
+              const seq = sequencesMap[enrollment.sequence_id]
+              const isLast = i === enrollments.length - 1
+              const completed = !!enrollment.completed_at
+              return (
+                <li
+                  key={enrollment.id}
+                  className="py-3 text-sm flex items-start justify-between gap-4"
+                  style={{ borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)' }}
+                >
+                  <div className="space-y-0.5">
+                    <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {seq?.name ?? (
+                        <span className="italic" style={{ color: 'var(--text-tertiary)' }}>
+                          Séquence inconnue
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      Inscrit le {formatDate(enrollment.enrolled_at)} · Étape{' '}
+                      {enrollment.current_step}
+                    </p>
+                  </div>
+                  <span
+                    className="shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5"
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      borderRadius: '20px',
+                      background: completed ? 'var(--green-subtle)' : 'var(--accent-subtle)',
+                      color: completed ? 'var(--green)' : 'var(--accent-hover)',
+                      border: `1px solid ${completed ? 'rgba(34,197,94,0.2)' : 'rgba(99,102,241,0.2)'}`,
+                    }}
+                  >
+                    {completed ? 'Terminée' : 'En cours'}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
 
       {/* Activité email */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Activité email{' '}
-            <span className="text-gray-400 font-normal text-sm">
-              (20 derniers événements)
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {events.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">
-              Aucune activité enregistrée pour ce contact.
-            </p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {events.map((event) => (
-                <li key={event.id} className="py-3 flex items-start gap-3 text-sm">
+      <div style={cardStyle} className="fade-up-2">
+        <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+          Activité email{' '}
+          <span className="text-sm font-normal" style={{ color: 'var(--text-tertiary)' }}>
+            (20 derniers événements)
+          </span>
+        </h2>
+        {events.length === 0 ? (
+          <p className="text-sm italic" style={{ color: 'var(--text-tertiary)' }}>
+            Aucune activité enregistrée pour ce contact.
+          </p>
+        ) : (
+          <ul>
+            {events.map((event, i) => {
+              const isLast = i === events.length - 1
+              const isOpen = event.event_type === 'open'
+              return (
+                <li
+                  key={event.id}
+                  className="py-3 flex items-start gap-3 text-sm"
+                  style={{ borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)' }}
+                >
                   <div className="mt-0.5 shrink-0">
-                    {event.event_type === 'open' ? (
-                      <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center">
-                        <Mail size={13} className="text-blue-500" />
-                      </div>
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-violet-50 flex items-center justify-center">
-                        <MousePointerClick size={13} className="text-violet-500" />
-                      </div>
-                    )}
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{
+                        background: isOpen ? 'var(--accent-subtle)' : 'rgba(168, 85, 247, 0.12)',
+                      }}
+                    >
+                      {isOpen ? (
+                        <Mail size={13} style={{ color: 'var(--accent)' }} />
+                      ) : (
+                        <MousePointerClick size={13} style={{ color: '#c084fc' }} />
+                      )}
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-700">
-                      {event.event_type === 'open' ? 'Email ouvert' : 'Lien cliqué'}
+                    <p style={{ color: 'var(--text-primary)' }}>
+                      {isOpen ? 'Email ouvert' : 'Lien cliqué'}
                     </p>
                     {event.url && (
-                      <p className="text-xs text-gray-400 truncate mt-0.5">
+                      <p
+                        className="text-xs truncate mt-0.5"
+                        style={{ color: 'var(--text-tertiary)' }}
+                      >
                         {event.url}
                       </p>
                     )}
                   </div>
-                  <span className="text-xs text-gray-400 shrink-0 mt-0.5">
+                  <span
+                    className="text-xs shrink-0 mt-0.5"
+                    style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}
+                  >
                     {formatDateTime(event.occurred_at)}
                   </span>
                 </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+              )
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }

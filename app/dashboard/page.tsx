@@ -171,12 +171,34 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-gray-900">Tableau de bord</h1>
-        <p className="text-sm text-gray-400 mt-0.5">
-          Vue d&rsquo;ensemble de vos campagnes email
-        </p>
+      {/* Header with data freshness indicator */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1
+            className="font-semibold"
+            style={{ fontSize: '24px', color: 'var(--text-primary)' }}
+          >
+            Tableau de bord
+          </h1>
+          <p
+            className="text-sm mt-0.5"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Vue d&rsquo;ensemble de vos campagnes email
+          </p>
+        </div>
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
+          <span className="pulse-dot" />
+          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Actualisé à l&apos;instant
+          </span>
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -185,33 +207,55 @@ export default async function DashboardPage() {
           label="Total contacts"
           value={contactCount.toLocaleString('fr-FR')}
           icon={Users}
+          animationDelay={0}
         />
         <StatCard
           label="Taux d'ouverture (30j)"
           value={sent30 > 0 ? formatPercent(openRate) : '—'}
           icon={MailOpen}
+          animationDelay={60}
         />
         <StatCard
           label="Taux de clic (30j)"
           value={sent30 > 0 ? formatPercent(clickRate) : '—'}
           icon={MousePointerClick}
+          animationDelay={120}
         />
       </div>
 
       {/* Sequence stats */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+      <div className="space-y-3" style={{ animation: 'fadeUp 0.3s ease 180ms both' }}>
+        <h2
+          className="text-xs font-medium uppercase"
+          style={{
+            color: 'var(--text-secondary)',
+            letterSpacing: '0.08em',
+          }}
+        >
           Stats par séquence
         </h2>
         <SequenceStatsTable sequences={sequenceStats} />
       </div>
 
       {/* Activity feed */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+      <div className="space-y-3" style={{ animation: 'fadeUp 0.3s ease 240ms both' }}>
+        <h2
+          className="text-xs font-medium uppercase"
+          style={{
+            color: 'var(--text-secondary)',
+            letterSpacing: '0.08em',
+          }}
+        >
           Activité récente
         </h2>
-        <div className="rounded-lg border border-gray-200 bg-white px-4">
+        <div
+          className="px-4"
+          style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '12px',
+          }}
+        >
           <ActivityFeed events={activityEvents} />
         </div>
       </div>

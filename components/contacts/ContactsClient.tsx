@@ -3,31 +3,21 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Contact } from '@/types'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { Search } from 'lucide-react'
 
-// Stable palette for tags — deterministic based on tag string
+// Dark-mode palette for tags — deterministic based on tag string
 const TAG_COLORS = [
-  'bg-blue-100 text-blue-700 border-blue-200',
-  'bg-violet-100 text-violet-700 border-violet-200',
-  'bg-emerald-100 text-emerald-700 border-emerald-200',
-  'bg-amber-100 text-amber-700 border-amber-200',
-  'bg-rose-100 text-rose-700 border-rose-200',
-  'bg-cyan-100 text-cyan-700 border-cyan-200',
-  'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
-  'bg-lime-100 text-lime-700 border-lime-200',
+  { bg: 'rgba(99, 102, 241, 0.15)', text: '#818cf8', border: 'rgba(99, 102, 241, 0.25)' },
+  { bg: 'rgba(168, 85, 247, 0.15)', text: '#c084fc', border: 'rgba(168, 85, 247, 0.25)' },
+  { bg: 'rgba(34, 197, 94, 0.12)', text: '#4ade80', border: 'rgba(34, 197, 94, 0.2)' },
+  { bg: 'rgba(245, 158, 11, 0.12)', text: '#fbbf24', border: 'rgba(245, 158, 11, 0.2)' },
+  { bg: 'rgba(239, 68, 68, 0.12)', text: '#f87171', border: 'rgba(239, 68, 68, 0.2)' },
+  { bg: 'rgba(6, 182, 212, 0.12)', text: '#22d3ee', border: 'rgba(6, 182, 212, 0.2)' },
+  { bg: 'rgba(236, 72, 153, 0.12)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.2)' },
+  { bg: 'rgba(132, 204, 22, 0.12)', text: '#a3e635', border: 'rgba(132, 204, 22, 0.2)' },
 ]
 
-function tagColor(tag: string): string {
+function tagColor(tag: string) {
   let hash = 0
   for (let i = 0; i < tag.length; i++) {
     hash = (hash * 31 + tag.charCodeAt(i)) & 0xffffffff
@@ -85,108 +75,166 @@ export default function ContactsClient({ contacts, allTags }: Props) {
     setPage(1)
   }
 
+  const thStyle: React.CSSProperties = {
+    fontSize: '11px',
+    fontWeight: 500,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    color: 'var(--text-tertiary)',
+    padding: '12px 16px',
+    textAlign: 'left',
+    borderBottom: '1px solid var(--border-subtle)',
+    whiteSpace: 'nowrap',
+  }
+
   return (
     <div className="space-y-4">
-      {/* Barre de recherche */}
+      {/* Search bar */}
       <div className="relative">
         <Search
           size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ color: 'var(--text-tertiary)' }}
         />
-        <Input
+        <input
           value={search}
           onChange={handleSearchChange}
           placeholder="Rechercher par email ou prénom…"
-          className="pl-9 bg-white"
+          className="w-full pl-9 pr-4 py-2 rounded-lg text-sm transition-colors"
+          style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border-default)',
+            color: 'var(--text-primary)',
+            outline: 'none',
+          }}
         />
       </div>
 
       {/* Tag pills */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {allTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => handleTagClick(tag)}
-              className={[
-                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all',
-                tagColor(tag),
-                activeTag === tag
-                  ? 'ring-2 ring-offset-1 ring-gray-400 opacity-100'
-                  : 'opacity-80 hover:opacity-100',
-              ].join(' ')}
-            >
-              {tag}
-            </button>
-          ))}
+          {allTags.map((tag) => {
+            const colors = tagColor(tag)
+            const isActive = activeTag === tag
+            return (
+              <button
+                key={tag}
+                onClick={() => handleTagClick(tag)}
+                className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all"
+                style={{
+                  background: colors.bg,
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`,
+                  opacity: isActive ? 1 : 0.75,
+                  boxShadow: isActive ? `0 0 0 2px ${colors.border}` : 'none',
+                }}
+              >
+                {tag}
+              </button>
+            )
+          })}
         </div>
       )}
 
-      {/* Tableau */}
+      {/* Table or empty */}
       {filtered.length === 0 ? (
-        <div className="py-16 text-center text-sm text-gray-400">
+        <div
+          className="py-16 text-center text-sm"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
           {contacts.length === 0
             ? 'Aucun contact pour le moment.'
             : 'Aucun contact ne correspond à votre recherche.'}
         </div>
       ) : (
         <>
-          <div className="rounded-md border border-gray-200 bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Prénom</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Tags</TableHead>
-                  <TableHead className="text-right">Date d&apos;ajout</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginated.map((contact) => (
-                  <TableRow
-                    key={contact.id}
-                    className="cursor-pointer"
-                    onClick={() => router.push(`/contacts/${contact.id}`)}
-                  >
-                    <TableCell className="font-medium text-gray-800">
-                      {contact.first_name ?? (
-                        <span className="text-gray-400 italic">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {contact.email}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {contact.tags.length === 0 ? (
-                          <span className="text-gray-400 text-xs italic">—</span>
-                        ) : (
-                          contact.tags.map((tag) => (
-                            <Badge
-                              key={tag}
-                              className={[
-                                'border text-xs font-normal',
-                                tagColor(tag),
-                              ].join(' ')}
-                            >
-                              {tag}
-                            </Badge>
-                          ))
+          <div
+            style={{
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
+              overflow: 'hidden',
+              background: 'var(--bg-surface)',
+            }}
+          >
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ background: 'var(--bg-surface)' }}>
+                  <th style={thStyle}>Prénom</th>
+                  <th style={thStyle}>Email</th>
+                  <th style={thStyle}>Tags</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Date d&apos;ajout</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map((contact, i) => {
+                  const isLast = i === paginated.length - 1
+                  const cellStyle: React.CSSProperties = {
+                    padding: '12px 16px',
+                    borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
+                    color: 'var(--text-secondary)',
+                  }
+                  return (
+                    <tr
+                      key={contact.id}
+                      className="cursor-pointer"
+                      style={{ background: 'var(--bg-surface)', transition: 'background 0.1s ease' }}
+                      onClick={() => router.push(`/contacts/${contact.id}`)}
+                      onMouseEnter={(e) => {
+                        ;(e.currentTarget as HTMLTableRowElement).style.background = 'var(--bg-elevated)'
+                      }}
+                      onMouseLeave={(e) => {
+                        ;(e.currentTarget as HTMLTableRowElement).style.background = 'var(--bg-surface)'
+                      }}
+                    >
+                      <td style={{ ...cellStyle, color: 'var(--text-primary)', fontWeight: 500 }}>
+                        {contact.first_name ?? (
+                          <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic' }}>—</span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right text-gray-500 text-xs">
-                      {formatDate(contact.created_at)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </td>
+                      <td style={cellStyle}>{contact.email}</td>
+                      <td style={cellStyle}>
+                        <div className="flex flex-wrap gap-1">
+                          {contact.tags.length === 0 ? (
+                            <span style={{ color: 'var(--text-tertiary)', fontSize: '12px', fontStyle: 'italic' }}>—</span>
+                          ) : (
+                            contact.tags.map((tag) => {
+                              const colors = tagColor(tag)
+                              return (
+                                <span
+                                  key={tag}
+                                  className="inline-flex items-center rounded-full px-2 py-0.5"
+                                  style={{
+                                    fontSize: '11px',
+                                    fontWeight: 500,
+                                    background: colors.bg,
+                                    color: colors.text,
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: '20px',
+                                  }}
+                                >
+                                  {tag}
+                                </span>
+                              )
+                            })
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ ...cellStyle, textAlign: 'right', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+                        {formatDate(contact.created_at)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between text-sm text-gray-500">
+            <div
+              className="flex items-center justify-between text-sm"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               <span>
                 {(currentPage - 1) * PAGE_SIZE + 1}–
                 {Math.min(currentPage * PAGE_SIZE, filtered.length)} sur{' '}
@@ -196,17 +244,27 @@ export default function ContactsClient({ contacts, allTags }: Props) {
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="px-3 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 rounded-lg text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    border: '1px solid var(--border-default)',
+                    background: 'var(--bg-elevated)',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
                   Précédent
                 </button>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                   Page {currentPage} / {totalPages}
                 </span>
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="px-3 py-1 rounded border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 rounded-lg text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    border: '1px solid var(--border-default)',
+                    background: 'var(--bg-elevated)',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
                   Suivant
                 </button>

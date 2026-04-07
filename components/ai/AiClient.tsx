@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import SuggestionCard from './SuggestionCard'
 import { AiSuggestion } from '@/types'
 import { Sparkles } from 'lucide-react'
@@ -56,40 +55,67 @@ export default function AiClient({ initialSuggestions, sourceSteps }: AiClientPr
     <div className="space-y-6">
       {/* Generate button */}
       <div className="flex items-center gap-4">
-        <Button
+        <button
           onClick={handleGenerate}
           disabled={loading}
-          className="gap-2"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: 'var(--accent)',
+            color: '#ffffff',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            if (!loading) e.currentTarget.style.background = 'var(--accent-hover)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--accent)'
+          }}
         >
           <Sparkles size={16} />
           {loading ? 'Génération en cours...' : 'Générer de nouvelles suggestions'}
-        </Button>
+        </button>
         {error && (
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm" style={{ color: 'var(--red)' }}>{error}</p>
         )}
       </div>
 
       {/* Suggestions list */}
       {suggestions.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-200 bg-white p-12 text-center">
-          <Sparkles size={24} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-sm text-gray-500">
+        <div
+          className="p-12 text-center"
+          style={{
+            border: '1px dashed var(--border-default)',
+            borderRadius: '12px',
+            background: 'var(--bg-surface)',
+          }}
+        >
+          <Sparkles
+            size={24}
+            className="mx-auto mb-3"
+            style={{ color: 'var(--text-tertiary)' }}
+          />
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Aucune suggestion pour le moment. Clique sur le bouton ci-dessus pour en générer.
           </p>
         </div>
       ) : (
         <div className="grid gap-4">
-          {suggestions.map((suggestion) => {
+          {suggestions.map((suggestion, i) => {
             const source = getSourceInfo(suggestion)
             return (
-              <SuggestionCard
+              <div
                 key={suggestion.id}
-                suggestion={suggestion}
-                sourceSubject={source?.subject ?? null}
-                openRate={source?.openRate ?? null}
-                onApprove={handleApprove}
-                onDismiss={handleDismiss}
-              />
+                style={{ animation: `fadeUp 0.3s ease ${i * 60}ms both` }}
+              >
+                <SuggestionCard
+                  suggestion={suggestion}
+                  sourceSubject={source?.subject ?? null}
+                  openRate={source?.openRate ?? null}
+                  onApprove={handleApprove}
+                  onDismiss={handleDismiss}
+                />
+              </div>
             )
           })}
         </div>
