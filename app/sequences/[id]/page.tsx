@@ -1,4 +1,10 @@
-// TODO
-export default function Page() {
-  return <div />
+import { redirect } from 'next/navigation'
+
+export default async function SequenceDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  redirect(`/sequences/${id}/edit`)
 }
