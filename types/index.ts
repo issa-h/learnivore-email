@@ -53,6 +53,8 @@ export interface EmailEvent {
   event_type: 'open' | 'click'
   url: string | null
   occurred_at: string
+  ip: string | null
+  user_agent: string | null
 }
 
 export interface AiSuggestion {

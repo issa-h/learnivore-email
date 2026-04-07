@@ -32,7 +32,7 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-56 shrink-0 border-r border-gray-200 bg-white flex flex-col h-full">
+    <aside aria-label="Navigation principale" className="w-56 shrink-0 border-r border-gray-200 bg-white flex flex-col h-full">
       <div className="px-6 py-5 border-b border-gray-100">
         <span className="text-sm font-semibold text-gray-900 tracking-tight">
           Learnivore Email
