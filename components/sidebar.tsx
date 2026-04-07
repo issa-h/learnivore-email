@@ -70,9 +70,13 @@ export default function Sidebar() {
                   ? {
                       background: 'var(--accent-subtle)',
                       color: 'var(--accent-hover)',
+                      borderLeft: '3px solid var(--accent)',
+                      paddingLeft: 'calc(12px - 3px)',
                     }
                   : {
                       color: 'var(--text-secondary)',
+                      borderLeft: '3px solid transparent',
+                      paddingLeft: 'calc(12px - 3px)',
                     }
               }
               onMouseEnter={(e) => {

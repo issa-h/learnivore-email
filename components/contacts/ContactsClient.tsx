@@ -7,14 +7,14 @@ import { Search } from 'lucide-react'
 
 // Dark-mode palette for tags — deterministic based on tag string
 const TAG_COLORS = [
-  { bg: 'rgba(99, 102, 241, 0.15)', text: '#818cf8', border: 'rgba(99, 102, 241, 0.25)' },
-  { bg: 'rgba(168, 85, 247, 0.15)', text: '#c084fc', border: 'rgba(168, 85, 247, 0.25)' },
-  { bg: 'rgba(34, 197, 94, 0.12)', text: '#4ade80', border: 'rgba(34, 197, 94, 0.2)' },
-  { bg: 'rgba(245, 158, 11, 0.12)', text: '#fbbf24', border: 'rgba(245, 158, 11, 0.2)' },
-  { bg: 'rgba(239, 68, 68, 0.12)', text: '#f87171', border: 'rgba(239, 68, 68, 0.2)' },
-  { bg: 'rgba(6, 182, 212, 0.12)', text: '#22d3ee', border: 'rgba(6, 182, 212, 0.2)' },
-  { bg: 'rgba(236, 72, 153, 0.12)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.2)' },
-  { bg: 'rgba(132, 204, 22, 0.12)', text: '#a3e635', border: 'rgba(132, 204, 22, 0.2)' },
+  { bg: 'rgba(124, 58, 237, 0.22)', text: '#a78bfa', border: 'rgba(124, 58, 237, 0.4)' },
+  { bg: 'rgba(168, 85, 247, 0.22)', text: '#d8b4fe', border: 'rgba(168, 85, 247, 0.4)' },
+  { bg: 'rgba(34, 197, 94, 0.18)', text: '#4ade80', border: 'rgba(34, 197, 94, 0.35)' },
+  { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
+  { bg: 'rgba(239, 68, 68, 0.18)', text: '#fca5a5', border: 'rgba(239, 68, 68, 0.35)' },
+  { bg: 'rgba(6, 182, 212, 0.18)', text: '#67e8f9', border: 'rgba(6, 182, 212, 0.35)' },
+  { bg: 'rgba(236, 72, 153, 0.18)', text: '#f9a8d4', border: 'rgba(236, 72, 153, 0.35)' },
+  { bg: 'rgba(132, 204, 22, 0.18)', text: '#bef264', border: 'rgba(132, 204, 22, 0.35)' },
 ]
 
 function tagColor(tag: string) {
@@ -125,7 +125,7 @@ export default function ContactsClient({ contacts, allTags }: Props) {
                   background: colors.bg,
                   color: colors.text,
                   border: `1px solid ${colors.border}`,
-                  opacity: isActive ? 1 : 0.75,
+                  opacity: isActive ? 1 : 0.9,
                   boxShadow: isActive ? `0 0 0 2px ${colors.border}` : 'none',
                 }}
               >

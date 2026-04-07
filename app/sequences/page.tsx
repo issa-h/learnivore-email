@@ -90,9 +90,8 @@ export default async function SequencesPage() {
             href="/sequences/new"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             style={{
-              border: '1px solid var(--border-default)',
-              background: 'var(--bg-elevated)',
-              color: 'var(--text-secondary)',
+              background: 'var(--accent)',
+              color: '#ffffff',
             }}
           >
             <Plus size={14} />

@@ -208,18 +208,21 @@ export default async function DashboardPage() {
           value={contactCount.toLocaleString('fr-FR')}
           icon={Users}
           animationDelay={0}
+          accentColor="var(--accent)"
         />
         <StatCard
           label="Taux d'ouverture (30j)"
           value={sent30 > 0 ? formatPercent(openRate) : '—'}
           icon={MailOpen}
           animationDelay={60}
+          accentColor="var(--green)"
         />
         <StatCard
           label="Taux de clic (30j)"
           value={sent30 > 0 ? formatPercent(clickRate) : '—'}
           icon={MousePointerClick}
           animationDelay={120}
+          accentColor="#06b6d4"
         />
       </div>
 

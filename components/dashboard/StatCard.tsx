@@ -7,6 +7,7 @@ interface StatCardProps {
   delta?: string
   deltaPositive?: boolean
   animationDelay?: number
+  accentColor?: string
 }
 
 export default function StatCard({
@@ -16,12 +17,14 @@ export default function StatCard({
   delta,
   deltaPositive,
   animationDelay = 0,
+  accentColor,
 }: StatCardProps) {
   return (
     <div
       className="card-dark space-y-3"
       style={{
         animation: `fadeUp 0.3s ease ${animationDelay}ms both`,
+        borderTop: accentColor ? `2px solid ${accentColor}` : undefined,
       }}
     >
       <div className="flex items-center justify-between">
