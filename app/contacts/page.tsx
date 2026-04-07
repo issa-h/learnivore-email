@@ -11,22 +11,35 @@ export const metadata = {
 export default async function ContactsPage() {
   const supabase = createAdminClient()
 
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('id, email, first_name, source, tags, created_at')
-    .order('created_at', { ascending: false })
+  // Fetch all contacts (Supabase default limit is 1000)
+  const allContacts: Contact[] = []
+  let from = 0
+  const pageSize = 1000
+  let hasMore = true
 
-  if (error) {
-    return (
-      <div className="p-8">
-        <p className="text-sm text-red-600">
-          Erreur lors du chargement des contacts : {error.message}
-        </p>
-      </div>
-    )
+  while (hasMore) {
+    const { data: batch, error: batchError } = await supabase
+      .from('contacts')
+      .select('id, email, first_name, source, tags, created_at')
+      .order('created_at', { ascending: false })
+      .range(from, from + pageSize - 1)
+
+    if (batchError) {
+      return (
+        <div className="p-8">
+          <p className="text-sm text-red-600">
+            Erreur lors du chargement des contacts : {batchError.message}
+          </p>
+        </div>
+      )
+    }
+
+    allContacts.push(...(batch ?? []))
+    hasMore = (batch?.length ?? 0) === pageSize
+    from += pageSize
   }
 
-  const contacts: Contact[] = data ?? []
+  const contacts = allContacts
 
   // Collect all unique tags across all contacts, sorted alphabetically
   const allTags = Array.from(
