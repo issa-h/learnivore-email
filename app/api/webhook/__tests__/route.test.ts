@@ -203,12 +203,13 @@ describe('POST /api/webhook', () => {
       expect(json.ok).toBe(true)
 
       // enrollments.insert should NOT have been called
-      const enrollmentFromCalls = supabaseMock.from.mock.calls
-        .filter((c: string[][]) => c[0] === 'enrollments')
-      // Only the select (check) call, no insert
-      for (const call of enrollmentFromCalls) {
-        void call // just checking count
-      }
+      // The mock returns a fresh object per call — grab the one for 'enrollments'
+      // and verify insert was never invoked on it
+      const enrollmentMock = supabaseMock.from.mock.results
+        .find((_: jest.MockResult<unknown>, i: number) => supabaseMock.from.mock.calls[i][0] === 'enrollments')
+        ?.value as { select: jest.Mock; insert: jest.Mock } | undefined
+      expect(enrollmentMock).toBeDefined()
+      expect(enrollmentMock!.insert).not.toHaveBeenCalled()
       // send_queue should also not be called
       const tableCalls = supabaseMock.from.mock.calls.map((c: string[][]) => c[0])
       expect(tableCalls).not.toContain('send_queue')
