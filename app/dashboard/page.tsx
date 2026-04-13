@@ -29,102 +29,95 @@ export default async function DashboardPage() {
     .from('contacts')
     .select('id', { count: 'exact', head: true })
 
-  // ── 2. Stats globales 30j ─────────────────────────────────────────────────
-  const thirtyDaysAgo = new Date(
-    Date.now() - 30 * 24 * 60 * 60 * 1000
-  ).toISOString()
+  // ── 2. Stats globales (agrégées depuis sequence_steps + events réels) ────
+  // Historique TinyPages (stocké sur les steps)
+  const { data: allSteps } = await supabase
+    .from('sequence_steps')
+    .select('total_sent, total_opens, total_clicks')
 
-  // Emails envoyés sur les 30 derniers jours
-  const { count: sentLast30 } = await supabase
+  const histSent = (allSteps ?? []).reduce((s, r) => s + (r.total_sent ?? 0), 0)
+  const histOpens = (allSteps ?? []).reduce((s, r) => s + (r.total_opens ?? 0), 0)
+  const histClicks = (allSteps ?? []).reduce((s, r) => s + (r.total_clicks ?? 0), 0)
+
+  // Events réels (envoyés depuis la plateforme)
+  const { count: realSent } = await supabase
     .from('send_queue')
     .select('id', { count: 'exact', head: true })
     .eq('status', 'sent')
-    .gte('sent_at', thirtyDaysAgo)
 
-  // Opens uniques (max 1 par send_queue_id) sur 30j
-  const { data: openEvents } = await supabase
+  const { data: realOpenEvents } = await supabase
     .from('email_events')
     .select('send_queue_id')
     .eq('event_type', 'open')
-    .gte('occurred_at', thirtyDaysAgo)
 
-  const { data: clickEvents } = await supabase
+  const { data: realClickEvents } = await supabase
     .from('email_events')
     .select('send_queue_id')
     .eq('event_type', 'click')
-    .gte('occurred_at', thirtyDaysAgo)
 
-  const uniqueOpens = new Set(openEvents?.map((e) => e.send_queue_id) ?? []).size
-  const uniqueClicks = new Set(clickEvents?.map((e) => e.send_queue_id) ?? []).size
+  const realOpens = new Set(realOpenEvents?.map((e) => e.send_queue_id) ?? []).size
+  const realClicks = new Set(realClickEvents?.map((e) => e.send_queue_id) ?? []).size
 
-  const sent30 = sentLast30 ?? 0
-  const openRate = sent30 > 0 ? (uniqueOpens / sent30) * 100 : 0
-  const clickRate = sent30 > 0 ? (uniqueClicks / sent30) * 100 : 0
+  // Combiner historique + réel
+  const totalSent = histSent + (realSent ?? 0)
+  const totalOpens = histOpens + realOpens
+  const totalClicks = histClicks + realClicks
+
+  const openRate = totalSent > 0 ? (totalOpens / totalSent) * 100 : 0
+  const clickRate = totalSent > 0 ? (totalClicks / totalSent) * 100 : 0
 
   // ── 3. Stats par séquence ─────────────────────────────────────────────────
-  const { data: sequences } = await supabase
+  const { data: allSequences } = await supabase
     .from('sequences')
     .select('id, name')
-    .eq('is_active', true)
     .order('created_at', { ascending: false })
 
   const sequenceStats: SequenceStat[] = []
 
-  for (const seq of sequences ?? []) {
-    // Inscrits
+  for (const seq of allSequences ?? []) {
     const { count: enrolled } = await supabase
       .from('enrollments')
       .select('id', { count: 'exact', head: true })
       .eq('sequence_id', seq.id)
 
-    // Steps de la séquence
+    // Steps avec stats agrégées
     const { data: steps } = await supabase
       .from('sequence_steps')
-      .select('id')
+      .select('id, total_sent, total_opens, total_clicks')
       .eq('sequence_id', seq.id)
 
     const stepIds = steps?.map((s) => s.id) ?? []
 
-    // Envoyés
-    let sent = 0
+    // Stats historiques (agrégées sur les steps)
+    const hSent = (steps ?? []).reduce((s, r) => s + (r.total_sent ?? 0), 0)
+    const hOpens = (steps ?? []).reduce((s, r) => s + (r.total_opens ?? 0), 0)
+    const hClicks = (steps ?? []).reduce((s, r) => s + (r.total_clicks ?? 0), 0)
+
+    // Stats réelles (events dans la plateforme)
+    let rSent = 0
     if (stepIds.length > 0) {
       const { count } = await supabase
         .from('send_queue')
         .select('id', { count: 'exact', head: true })
         .in('sequence_step_id', stepIds)
         .eq('status', 'sent')
-      sent = count ?? 0
+      rSent = count ?? 0
     }
 
-    // Opens et clics uniques pour cette séquence
+    const seqTotalSent = hSent + rSent
     let seqOpenRate: number | null = null
     let seqClickRate: number | null = null
 
-    if (stepIds.length > 0 && sent > 0) {
-      const { data: seqOpens } = await supabase
-        .from('email_events')
-        .select('send_queue_id')
-        .eq('event_type', 'open')
-        .in('sequence_step_id', stepIds)
-
-      const { data: seqClicks } = await supabase
-        .from('email_events')
-        .select('send_queue_id')
-        .eq('event_type', 'click')
-        .in('sequence_step_id', stepIds)
-
-      const uOpens = new Set(seqOpens?.map((e) => e.send_queue_id) ?? []).size
-      const uClicks = new Set(seqClicks?.map((e) => e.send_queue_id) ?? []).size
-
-      seqOpenRate = (uOpens / sent) * 100
-      seqClickRate = (uClicks / sent) * 100
+    if (seqTotalSent > 0) {
+      seqOpenRate = (hOpens / seqTotalSent) * 100
+      seqClickRate = (hClicks / seqTotalSent) * 100
     }
 
     sequenceStats.push({
       id: seq.id,
       name: seq.name,
       enrolled: enrolled ?? 0,
-      sent,
+      sent: seqTotalSent,
       openRate: seqOpenRate,
       clickRate: seqClickRate,
     })
@@ -211,15 +204,15 @@ export default async function DashboardPage() {
           accentColor="var(--accent)"
         />
         <StatCard
-          label="Taux d'ouverture (30j)"
-          value={sent30 > 0 ? formatPercent(openRate) : '—'}
+          label="Taux d'ouverture"
+          value={totalSent > 0 ? formatPercent(openRate) : '—'}
           icon={MailOpen}
           animationDelay={60}
           accentColor="var(--green)"
         />
         <StatCard
-          label="Taux de clic (30j)"
-          value={sent30 > 0 ? formatPercent(clickRate) : '—'}
+          label="Taux de clic"
+          value={totalSent > 0 ? formatPercent(clickRate) : '—'}
           icon={MousePointerClick}
           animationDelay={120}
           accentColor="#06b6d4"
