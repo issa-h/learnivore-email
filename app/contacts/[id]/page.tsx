@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
 import { Contact, Enrollment, EmailEvent, Sequence } from '@/types'
 import { Mail, MousePointerClick, ChevronRight } from 'lucide-react'
+import DeleteContactButton from '@/components/contacts/DeleteContactButton'
 
 // Dark-mode palette for tags — deterministic based on tag string
 const TAG_COLORS = [
@@ -117,6 +118,9 @@ export default async function ContactDetailPage({ params }: PageProps) {
         </Link>
         <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
         <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{contact.email}</span>
+        <div className="ml-auto">
+          <DeleteContactButton contactId={contact.id} />
+        </div>
       </nav>
 
       {/* Contact card */}
