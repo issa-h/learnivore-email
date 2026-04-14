@@ -62,7 +62,7 @@ export default async function ContactDetailPage({ params }: PageProps) {
   // Fetch contact
   const { data: contactData, error: contactError } = await supabase
     .from('contacts')
-    .select('id, email, first_name, source, tags, created_at')
+    .select('id, email, first_name, source, tags, created_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term')
     .eq('id', id)
     .single()
 
@@ -167,9 +167,43 @@ export default async function ContactDetailPage({ params }: PageProps) {
               className="text-sm"
               style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
             >
-              {formatDate(contact.created_at)}
+              {formatDateTime(contact.created_at)}
             </dd>
           </div>
+          {(contact.utm_source || contact.utm_medium || contact.utm_campaign || contact.utm_content || contact.utm_term) && (
+            <div className="col-span-2">
+              <dt
+                className="text-xs uppercase mb-2"
+                style={{ color: 'var(--text-tertiary)', letterSpacing: '0.06em', fontWeight: 500 }}
+              >
+                UTMs
+              </dt>
+              <dd className="flex flex-wrap gap-2">
+                {[
+                  { label: 'source', value: contact.utm_source },
+                  { label: 'medium', value: contact.utm_medium },
+                  { label: 'campaign', value: contact.utm_campaign },
+                  { label: 'content', value: contact.utm_content },
+                  { label: 'term', value: contact.utm_term },
+                ].filter(u => u.value).map(u => (
+                  <span
+                    key={u.label}
+                    className="inline-flex items-center rounded-full px-2.5 py-0.5"
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      background: 'var(--accent-subtle)',
+                      color: 'var(--accent-hover)',
+                      border: '1px solid rgba(124, 58, 237, 0.3)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    {u.label}: {u.value}
+                  </span>
+                ))}
+              </dd>
+            </div>
+          )}
           <div className="col-span-2">
             <dt
               className="text-xs uppercase mb-2"

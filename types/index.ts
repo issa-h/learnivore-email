@@ -5,6 +5,11 @@ export interface Contact {
   source: string | null
   tags: string[]
   created_at: string
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  utm_content: string | null
+  utm_term: string | null
 }
 
 export interface Sequence {

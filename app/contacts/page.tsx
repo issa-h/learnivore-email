@@ -20,7 +20,7 @@ export default async function ContactsPage() {
   while (hasMore) {
     const { data: batch, error: batchError } = await supabase
       .from('contacts')
-      .select('id, email, first_name, source, tags, created_at')
+      .select('id, email, first_name, source, tags, created_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term')
       .order('created_at', { ascending: false })
       .range(from, from + pageSize - 1)
 
