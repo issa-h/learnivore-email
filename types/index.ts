@@ -67,3 +67,11 @@ export interface AiSuggestion {
   status: 'pending' | 'approved' | 'dismissed'
   created_at: string
 }
+
+export interface TagRule {
+  id: string
+  tag: string
+  sequence_id: string
+  is_active: boolean
+  created_at: string
+}

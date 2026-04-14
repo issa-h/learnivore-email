@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Mail, Sparkles } from 'lucide-react'
+import { LayoutDashboard, Users, Mail, Zap, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -20,6 +20,11 @@ const navItems = [
     href: '/sequences',
     label: 'Séquences',
     icon: Mail,
+  },
+  {
+    href: '/automations',
+    label: 'Automations',
+    icon: Zap,
   },
   {
     href: '/ai',

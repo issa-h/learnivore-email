@@ -76,7 +76,17 @@ create table ai_suggestions (
   created_at        timestamptz default now()
 );
 
+-- Tag rules (automation: tag → sequence enrollment)
+create table tag_rules (
+  id           uuid primary key default gen_random_uuid(),
+  tag          text not null,
+  sequence_id  uuid not null references sequences(id) on delete cascade,
+  is_active    boolean default true,
+  created_at   timestamptz default now()
+);
+
 -- Indexes
 create index on send_queue(status, scheduled_for);
 create index on email_events(send_queue_id, event_type);
 create index on contacts(email);
+create index on tag_rules(tag, is_active);

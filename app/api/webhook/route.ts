@@ -6,8 +6,7 @@ export async function POST(req: NextRequest) {
   let body: {
     email?: string
     first_name?: string
-    source?: string
-    sequence_id?: string
+    tag?: string
     secret?: string
   }
 
@@ -30,14 +29,26 @@ export async function POST(req: NextRequest) {
   const supabase = createAdminClient()
 
   try {
-    // 4. Upsert contact
+    // 4. Get existing contact to merge tags
+    const { data: existingContact } = await supabase
+      .from('contacts')
+      .select('id, tags')
+      .eq('email', body.email)
+      .maybeSingle()
+
+    const existingTags: string[] = existingContact?.tags ?? []
+    const newTag = body.tag
+    const mergedTags =
+      newTag && !existingTags.includes(newTag) ? [...existingTags, newTag] : existingTags
+
+    // 5. Upsert contact with merged tags
     const { data: contact, error: contactError } = await supabase
       .from('contacts')
       .upsert(
         {
           email: body.email,
           first_name: body.first_name ?? null,
-          source: body.source ?? null,
+          tags: mergedTags,
         },
         { onConflict: 'email' }
       )
@@ -53,72 +64,97 @@ export async function POST(req: NextRequest) {
 
     const contactId: string = contact.id
 
-    // 5. If sequence_id provided: check enrollment, create enrollment + send_queue item
-    if (body.sequence_id) {
-      // Check if enrollment already exists
-      const { data: existingEnrollment } = await supabase
-        .from('enrollments')
-        .select('id')
-        .eq('contact_id', contactId)
-        .eq('sequence_id', body.sequence_id)
-        .maybeSingle()
+    // 6. If tag provided: query matching tag_rules
+    if (body.tag) {
+      const { data: tagRules, error: rulesError } = await supabase
+        .from('tag_rules')
+        .select('id, sequence_id, sequences(name)')
+        .eq('tag', body.tag)
+        .eq('is_active', true)
 
-      if (!existingEnrollment) {
-        // Create enrollment
-        const { data: enrollment, error: enrollmentError } = await supabase
+      if (rulesError) {
+        return Response.json(
+          { error: 'Failed to query tag_rules', details: rulesError.message },
+          { status: 500 }
+        )
+      }
+
+      const sequencesEnrolled: string[] = []
+
+      for (const rule of tagRules ?? []) {
+        const sequenceId: string = rule.sequence_id
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sequenceName: string = (rule.sequences as any)?.name ?? sequenceId
+
+        // Check if enrollment already exists
+        const { data: existingEnrollment } = await supabase
           .from('enrollments')
-          .insert({
-            contact_id: contactId,
-            sequence_id: body.sequence_id,
-            current_step: 1,
-          })
           .select('id')
-          .single()
-
-        if (enrollmentError || !enrollment) {
-          return Response.json(
-            { error: 'Failed to create enrollment', details: enrollmentError?.message },
-            { status: 500 }
-          )
-        }
-
-        // Fetch the first step of the sequence (position = 1)
-        const { data: firstStep, error: stepError } = await supabase
-          .from('sequence_steps')
-          .select('id')
-          .eq('sequence_id', body.sequence_id)
-          .eq('position', 1)
+          .eq('contact_id', contactId)
+          .eq('sequence_id', sequenceId)
           .maybeSingle()
 
-        if (stepError) {
-          return Response.json(
-            { error: 'Failed to fetch sequence step', details: stepError.message },
-            { status: 500 }
-          )
-        }
+        if (!existingEnrollment) {
+          // Create enrollment
+          const { data: enrollment, error: enrollmentError } = await supabase
+            .from('enrollments')
+            .insert({
+              contact_id: contactId,
+              sequence_id: sequenceId,
+              current_step: 1,
+            })
+            .select('id')
+            .single()
 
-        if (firstStep) {
-          // Insert send_queue item
-          const { error: queueError } = await supabase.from('send_queue').insert({
-            contact_id: contactId,
-            sequence_step_id: firstStep.id,
-            enrollment_id: enrollment.id,
-            scheduled_for: new Date().toISOString(),
-            status: 'pending',
-          })
-
-          if (queueError) {
+          if (enrollmentError || !enrollment) {
             return Response.json(
-              { error: 'Failed to insert into send_queue', details: queueError.message },
+              { error: 'Failed to create enrollment', details: enrollmentError?.message },
               { status: 500 }
             )
           }
+
+          // Fetch the first step of the sequence (position = 1)
+          const { data: firstStep, error: stepError } = await supabase
+            .from('sequence_steps')
+            .select('id')
+            .eq('sequence_id', sequenceId)
+            .eq('position', 1)
+            .maybeSingle()
+
+          if (stepError) {
+            return Response.json(
+              { error: 'Failed to fetch sequence step', details: stepError.message },
+              { status: 500 }
+            )
+          }
+
+          if (firstStep) {
+            // Insert send_queue item
+            const { error: queueError } = await supabase.from('send_queue').insert({
+              contact_id: contactId,
+              sequence_step_id: firstStep.id,
+              enrollment_id: enrollment.id,
+              scheduled_for: new Date().toISOString(),
+              status: 'pending',
+            })
+
+            if (queueError) {
+              return Response.json(
+                { error: 'Failed to insert into send_queue', details: queueError.message },
+                { status: 500 }
+              )
+            }
+          }
+
+          sequencesEnrolled.push(sequenceName)
         }
       }
+
+      return Response.json({ ok: true, contact_id: contactId, sequences_enrolled: sequencesEnrolled })
     }
 
-    // 6. Return response
-    return Response.json({ ok: true, contact_id: contactId })
+    // 7. No tag: just return contact
+    return Response.json({ ok: true, contact_id: contactId, sequences_enrolled: [] })
   } catch (err) {
     return Response.json(
       { error: 'Internal server error', details: err instanceof Error ? err.message : String(err) },
