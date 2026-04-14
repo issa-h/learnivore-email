@@ -1,3 +1,5 @@
+'use client'
+
 export interface SequenceStat {
   id: string
   name: string
