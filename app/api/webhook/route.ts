@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
     email?: string
     first_name?: string
     tag?: string
+    tags?: string[]
     secret?: string
   }
 
@@ -37,9 +38,13 @@ export async function POST(req: NextRequest) {
       .maybeSingle()
 
     const existingTags: string[] = existingContact?.tags ?? []
-    const newTag = body.tag
-    const mergedTags =
-      newTag && !existingTags.includes(newTag) ? [...existingTags, newTag] : existingTags
+    // Support both `tag` (string) and `tags` (string[])
+    const incomingTags: string[] = body.tags
+      ? body.tags
+      : body.tag
+        ? [body.tag]
+        : []
+    const mergedTags = [...new Set([...existingTags, ...incomingTags])]
 
     // 5. Upsert contact with merged tags
     const { data: contact, error: contactError } = await supabase
@@ -64,12 +69,12 @@ export async function POST(req: NextRequest) {
 
     const contactId: string = contact.id
 
-    // 6. If tag provided: query matching tag_rules
-    if (body.tag) {
+    // 6. If tags provided: query matching tag_rules for ALL tags
+    if (incomingTags.length > 0) {
       const { data: tagRules, error: rulesError } = await supabase
         .from('tag_rules')
         .select('id, sequence_id, sequences(name)')
-        .eq('tag', body.tag)
+        .in('tag', incomingTags)
         .eq('is_active', true)
 
       if (rulesError) {
