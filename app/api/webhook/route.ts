@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { sendEmail } from '@/lib/ses'
+import { injectTrackingPixel, rewriteLinks } from '@/lib/tracking'
 
 export async function POST(req: NextRequest) {
   // 1. Parse body
@@ -127,7 +129,7 @@ export async function POST(req: NextRequest) {
           // Fetch the first step of the sequence (position = 1)
           const { data: firstStep, error: stepError } = await supabase
             .from('sequence_steps')
-            .select('id')
+            .select('id, delay_days, subject, html_body')
             .eq('sequence_id', sequenceId)
             .eq('position', 1)
             .maybeSingle()
@@ -140,20 +142,70 @@ export async function POST(req: NextRequest) {
           }
 
           if (firstStep) {
-            // Insert send_queue item
-            const { error: queueError } = await supabase.from('send_queue').insert({
-              contact_id: contactId,
-              sequence_step_id: firstStep.id,
-              enrollment_id: enrollment.id,
-              scheduled_for: new Date().toISOString(),
-              status: 'pending',
-            })
+            if (firstStep.delay_days === 0) {
+              // J+0 → envoi immédiat, pas de queue
+              const firstName = body.first_name || ''
+              const subject = firstStep.subject.replace(/\{\{first_name\}\}/g, firstName)
+              let htmlBody = firstStep.html_body.replace(/\{\{first_name\}\}/g, firstName)
 
-            if (queueError) {
-              return Response.json(
-                { error: 'Failed to insert into send_queue', details: queueError.message },
-                { status: 500 }
-              )
+              // Create send_queue entry for tracking
+              const { data: sqItem } = await supabase.from('send_queue').insert({
+                contact_id: contactId,
+                sequence_step_id: firstStep.id,
+                enrollment_id: enrollment.id,
+                scheduled_for: new Date().toISOString(),
+                status: 'pending',
+              }).select('id').single()
+
+              if (sqItem) {
+                htmlBody = rewriteLinks(htmlBody, sqItem.id)
+                htmlBody = injectTrackingPixel(htmlBody, sqItem.id)
+
+                try {
+                  const messageId = await sendEmail({ to: body.email!, subject, htmlBody })
+                  await supabase.from('send_queue').update({
+                    status: 'sent',
+                    sent_at: new Date().toISOString(),
+                    ses_message_id: messageId,
+                  }).eq('id', sqItem.id)
+                } catch {
+                  await supabase.from('send_queue').update({ status: 'failed' }).eq('id', sqItem.id)
+                }
+              }
+
+              // Schedule next step if exists
+              const { data: nextStep } = await supabase
+                .from('sequence_steps')
+                .select('id, delay_days')
+                .eq('sequence_id', sequenceId)
+                .eq('position', 2)
+                .maybeSingle()
+
+              if (nextStep) {
+                const scheduledFor = new Date()
+                scheduledFor.setDate(scheduledFor.getDate() + nextStep.delay_days)
+                await supabase.from('send_queue').insert({
+                  contact_id: contactId,
+                  sequence_step_id: nextStep.id,
+                  enrollment_id: enrollment.id,
+                  scheduled_for: scheduledFor.toISOString(),
+                  status: 'pending',
+                })
+                await supabase.from('enrollments').update({ current_step: 2 }).eq('id', enrollment.id)
+              } else {
+                await supabase.from('enrollments').update({ completed_at: new Date().toISOString() }).eq('id', enrollment.id)
+              }
+            } else {
+              // J+1 ou plus → mettre en queue pour le cron
+              const scheduledFor = new Date()
+              scheduledFor.setDate(scheduledFor.getDate() + firstStep.delay_days)
+              await supabase.from('send_queue').insert({
+                contact_id: contactId,
+                sequence_step_id: firstStep.id,
+                enrollment_id: enrollment.id,
+                scheduled_for: scheduledFor.toISOString(),
+                status: 'pending',
+              })
             }
           }
 
