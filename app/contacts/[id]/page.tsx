@@ -62,7 +62,7 @@ export default async function ContactDetailPage({ params }: PageProps) {
   // Fetch contact
   const { data: contactData, error: contactError } = await supabase
     .from('contacts')
-    .select('id, email, first_name, source, tags, created_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term')
+    .select('id, email, first_name, source, tags, utms, created_at')
     .eq('id', id)
     .single()
 
@@ -170,7 +170,7 @@ export default async function ContactDetailPage({ params }: PageProps) {
               {formatDateTime(contact.created_at)}
             </dd>
           </div>
-          {(contact.utm_source || contact.utm_medium || contact.utm_campaign || contact.utm_content || contact.utm_term) && (
+          {contact.utms && contact.utms.length > 0 && (
             <div className="col-span-2">
               <dt
                 className="text-xs uppercase mb-2"
@@ -179,15 +179,9 @@ export default async function ContactDetailPage({ params }: PageProps) {
                 UTMs
               </dt>
               <dd className="flex flex-wrap gap-2">
-                {[
-                  { label: 'source', value: contact.utm_source },
-                  { label: 'medium', value: contact.utm_medium },
-                  { label: 'campaign', value: contact.utm_campaign },
-                  { label: 'content', value: contact.utm_content },
-                  { label: 'term', value: contact.utm_term },
-                ].filter(u => u.value).map(u => (
+                {contact.utms.map((utm) => (
                   <span
-                    key={u.label}
+                    key={utm}
                     className="inline-flex items-center rounded-full px-2.5 py-0.5"
                     style={{
                       fontSize: '11px',
@@ -198,7 +192,7 @@ export default async function ContactDetailPage({ params }: PageProps) {
                       fontFamily: 'var(--font-mono)',
                     }}
                   >
-                    {u.label}: {u.value}
+                    {utm}
                   </span>
                 ))}
               </dd>

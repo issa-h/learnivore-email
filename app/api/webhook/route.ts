@@ -9,11 +9,7 @@ export async function POST(req: NextRequest) {
     tag?: string
     tags?: string[]
     secret?: string
-    utm_source?: string
-    utm_medium?: string
-    utm_campaign?: string
-    utm_content?: string
-    utm_term?: string
+    utms?: string[]
   }
 
   try {
@@ -38,7 +34,7 @@ export async function POST(req: NextRequest) {
     // 4. Get existing contact to merge tags
     const { data: existingContact } = await supabase
       .from('contacts')
-      .select('id, tags')
+      .select('id, tags, utms')
       .eq('email', body.email)
       .maybeSingle()
 
@@ -51,25 +47,22 @@ export async function POST(req: NextRequest) {
         : []
     const mergedTags = [...new Set([...existingTags, ...incomingTags])]
 
-    // 5. Upsert contact with merged tags + UTMs (only set UTMs on first insert, don't overwrite)
-    const upsertData: Record<string, unknown> = {
-      email: body.email,
-      first_name: body.first_name ?? null,
-      tags: mergedTags,
-    }
-
-    // Only set UTMs if contact is new (don't overwrite existing UTMs)
-    if (!existingContact) {
-      if (body.utm_source) upsertData.utm_source = body.utm_source
-      if (body.utm_medium) upsertData.utm_medium = body.utm_medium
-      if (body.utm_campaign) upsertData.utm_campaign = body.utm_campaign
-      if (body.utm_content) upsertData.utm_content = body.utm_content
-      if (body.utm_term) upsertData.utm_term = body.utm_term
-    }
+    // 5. Upsert contact with merged tags + UTMs
+    const existingUtms: string[] = (existingContact as any)?.utms ?? []
+    const incomingUtms: string[] = body.utms ?? []
+    const mergedUtms = [...new Set([...existingUtms, ...incomingUtms])]
 
     const { data: contact, error: contactError } = await supabase
       .from('contacts')
-      .upsert(upsertData, { onConflict: 'email' })
+      .upsert(
+        {
+          email: body.email,
+          first_name: body.first_name ?? null,
+          tags: mergedTags,
+          utms: mergedUtms,
+        },
+        { onConflict: 'email' }
+      )
       .select('id')
       .single()
 
