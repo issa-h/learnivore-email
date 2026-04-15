@@ -113,6 +113,19 @@ export default function ContactsClient({ contacts, allTags }: Props) {
       {/* Tag pills */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-2">
+          {activeTag && (
+            <button
+              onClick={() => { setActiveTag(null); setPage(1) }}
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium transition-all"
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-default)',
+              }}
+            >
+              ✕
+            </button>
+          )}
           {allTags.map((tag) => {
             const colors = tagColor(tag)
             const isActive = activeTag === tag
