@@ -3,8 +3,7 @@ import { processQueue } from '@/lib/queue'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest) {
-  // Optional: verify cron secret header for security
+async function handle(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret) {
     const authHeader = req.headers.get('authorization')
@@ -16,3 +15,6 @@ export async function GET(req: NextRequest) {
   const result = await processQueue()
   return NextResponse.json(result)
 }
+
+export const GET = handle
+export const POST = handle
