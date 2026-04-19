@@ -12,11 +12,21 @@ import {
   Pencil,
   Plus,
   ChevronRight,
+  MailOpen,
+  MousePointerClick,
+  Send,
 } from 'lucide-react'
+
+interface StepStat {
+  sent: number
+  openRate: number | null
+  clickRate: number | null
+}
 
 interface Props {
   sequence: Sequence
   steps: SequenceStep[]
+  stepStats?: Record<string, StepStat>
 }
 
 const inputStyle: React.CSSProperties = {
@@ -43,7 +53,12 @@ const btnGhost: React.CSSProperties = {
   transition: 'background 0.1s ease, color 0.1s ease',
 }
 
-export default function SequenceEditor({ sequence, steps: initialSteps }: Props) {
+function formatRate(rate: number | null): string {
+  if (rate === null) return '—'
+  return rate.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'
+}
+
+export default function SequenceEditor({ sequence, steps: initialSteps, stepStats }: Props) {
   const router = useRouter()
   const [name, setName] = useState(sequence.name)
   const [isActive, setIsActive] = useState(sequence.is_active)
@@ -293,6 +308,31 @@ export default function SequenceEditor({ sequence, steps: initialSteps }: Props)
                     ? 'Email initial'
                     : `${step.delay_days} jour${step.delay_days !== 1 ? 's' : ''} après l'étape précédente`}
                 </p>
+                {stepStats?.[step.id] && stepStats[step.id].sent > 0 && (
+                  <div className="flex items-center gap-3 mt-2">
+                    <span
+                      className="inline-flex items-center gap-1 text-xs"
+                      style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
+                    >
+                      <Send size={11} style={{ color: 'var(--text-tertiary)' }} />
+                      {stepStats[step.id].sent.toLocaleString('fr-FR')}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1 text-xs"
+                      style={{ color: 'var(--green)', fontFamily: 'var(--font-mono)' }}
+                    >
+                      <MailOpen size={11} />
+                      {formatRate(stepStats[step.id].openRate)}
+                    </span>
+                    <span
+                      className="inline-flex items-center gap-1 text-xs"
+                      style={{ color: 'var(--accent-hover)', fontFamily: 'var(--font-mono)' }}
+                    >
+                      <MousePointerClick size={11} />
+                      {formatRate(stepStats[step.id].clickRate)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}

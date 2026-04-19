@@ -45,5 +45,45 @@ export default async function SequenceEditPage({
   const sequence: Sequence = seqData
   const steps: SequenceStep[] = stepsData ?? []
 
-  return <SequenceEditor sequence={sequence} steps={steps} />
+  // Calculate per-step stats
+  const stepStats: Record<string, { sent: number; openRate: number | null; clickRate: number | null }> = {}
+
+  for (const step of steps) {
+    // Sent count
+    const { count: sentCount } = await supabase
+      .from('send_queue')
+      .select('id', { count: 'exact', head: true })
+      .eq('sequence_step_id', step.id)
+      .eq('status', 'sent')
+
+    const sent = (sentCount ?? 0) + ((step as any).total_sent ?? 0)
+
+    // Opens (unique per send_queue_id)
+    const { data: openEvents } = await supabase
+      .from('email_events')
+      .select('send_queue_id')
+      .eq('event_type', 'open')
+      .eq('sequence_step_id', step.id)
+
+    const uniqueOpens = new Set(openEvents?.map((e) => e.send_queue_id) ?? []).size
+    const totalOpens = uniqueOpens + ((step as any).total_opens ?? 0)
+
+    // Clicks (unique per send_queue_id)
+    const { data: clickEvents } = await supabase
+      .from('email_events')
+      .select('send_queue_id')
+      .eq('event_type', 'click')
+      .eq('sequence_step_id', step.id)
+
+    const uniqueClicks = new Set(clickEvents?.map((e) => e.send_queue_id) ?? []).size
+    const totalClicks = uniqueClicks + ((step as any).total_clicks ?? 0)
+
+    stepStats[step.id] = {
+      sent,
+      openRate: sent > 0 ? (totalOpens / sent) * 100 : null,
+      clickRate: sent > 0 ? (totalClicks / sent) * 100 : null,
+    }
+  }
+
+  return <SequenceEditor sequence={sequence} steps={steps} stepStats={stepStats} />
 }
