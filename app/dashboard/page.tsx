@@ -104,13 +104,35 @@ export default async function DashboardPage() {
       rSent = count ?? 0
     }
 
+    // Opens et clics réels depuis email_events
+    let rOpens = 0
+    let rClicks = 0
+    if (stepIds.length > 0) {
+      const { data: seqOpenEvents } = await supabase
+        .from('email_events')
+        .select('send_queue_id')
+        .eq('event_type', 'open')
+        .in('sequence_step_id', stepIds)
+
+      const { data: seqClickEvents } = await supabase
+        .from('email_events')
+        .select('send_queue_id')
+        .eq('event_type', 'click')
+        .in('sequence_step_id', stepIds)
+
+      rOpens = new Set(seqOpenEvents?.map((e) => e.send_queue_id) ?? []).size
+      rClicks = new Set(seqClickEvents?.map((e) => e.send_queue_id) ?? []).size
+    }
+
     const seqTotalSent = hSent + rSent
+    const seqTotalOpens = hOpens + rOpens
+    const seqTotalClicks = hClicks + rClicks
     let seqOpenRate: number | null = null
     let seqClickRate: number | null = null
 
     if (seqTotalSent > 0) {
-      seqOpenRate = (hOpens / seqTotalSent) * 100
-      seqClickRate = (hClicks / seqTotalSent) * 100
+      seqOpenRate = (seqTotalOpens / seqTotalSent) * 100
+      seqClickRate = (seqTotalClicks / seqTotalSent) * 100
     }
 
     sequenceStats.push({
