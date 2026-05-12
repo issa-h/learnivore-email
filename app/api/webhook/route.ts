@@ -158,6 +158,8 @@ export async function POST(req: NextRequest) {
               }).select('id').single()
 
               if (sqItem) {
+                const appUrl = process.env.APP_URL || 'https://learnivore-email.vercel.app'
+                htmlBody = htmlBody.replace(/\{\{unsubscribe_url\}\}/g, `${appUrl}/api/unsubscribe?sid=${sqItem.id}`)
                 htmlBody = rewriteLinks(htmlBody, sqItem.id)
                 htmlBody = injectTrackingPixel(htmlBody, sqItem.id)
 

@@ -1,1 +1,16 @@
-{}
+{
+  "crons": [
+    {
+      "path": "/api/send",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/impayes/check-paid",
+      "schedule": "50 8 * * *"
+    },
+    {
+      "path": "/api/impayes/send",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

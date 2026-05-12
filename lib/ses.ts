@@ -8,12 +8,14 @@ export async function sendEmail(params: {
   to: string
   subject: string
   htmlBody: string
+  replyTo?: string
 }): Promise<string> {
   const fromName = process.env.SES_FROM_NAME || 'Learnivore'
   const fromEmail = process.env.SES_FROM_EMAIL!
 
   const { data, error } = await getClient().emails.send({
     from: `${fromName} <${fromEmail}>`,
+    replyTo: params.replyTo ? [params.replyTo] : undefined,
     to: [params.to],
     subject: params.subject,
     html: params.htmlBody,

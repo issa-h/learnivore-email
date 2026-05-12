@@ -28,18 +28,14 @@ export async function POST() {
     .eq('event_type', 'open')
     .in('send_queue_id', sentQueueIds)
 
-  // 3. Deduplicate opens per (send_queue_id)
-  const uniqueOpens = new Set(openEvents?.map((e) => e.send_queue_id) ?? [])
-
-  // Count unique opens per step
+  // 3. Deduplicate opens per (send_queue_id) and count per step
+  const seenOpens = new Set<string>()
   const stepOpenCounts: Record<string, number> = {}
   for (const event of openEvents ?? []) {
-    if (uniqueOpens.has(event.send_queue_id)) {
-      const key = `${event.sequence_step_id}:${event.send_queue_id}`
-      if (!stepOpenCounts[`_seen_${key}`]) {
-        stepOpenCounts[event.sequence_step_id] = (stepOpenCounts[event.sequence_step_id] ?? 0) + 1
-        stepOpenCounts[`_seen_${key}`] = 1
-      }
+    const key = `${event.sequence_step_id}:${event.send_queue_id}`
+    if (!seenOpens.has(key)) {
+      seenOpens.add(key)
+      stepOpenCounts[event.sequence_step_id] = (stepOpenCounts[event.sequence_step_id] ?? 0) + 1
     }
   }
 
